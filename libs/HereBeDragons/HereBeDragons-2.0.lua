@@ -5,11 +5,6 @@ assert(LibStub, MAJOR .. " requires LibStub")
 
 local HereBeDragons, oldversion = LibStub:NewLibrary(MAJOR, MINOR)
 if not HereBeDragons then return end
-if not CreateVector2D then
-    function CreateVector2D(x, y)
-        return { x = x, y = y }
-    end
-end
 
 local CBH = LibStub("CallbackHandler-1.0")
 
@@ -38,6 +33,64 @@ local pairs, ipairs = pairs, ipairs
 -- WoW API upvalues
 local UnitPosition = UnitPosition
 local C_Map = C_Map
+
+-- Compatibility fixes for WoW 3.3.5
+-- Define missing CreateVector2D
+if not CreateVector2D then
+    function CreateVector2D(x, y)
+        return { x = x, y = y, GetXY = function(self) return self.x, self.y end }
+    end
+end
+
+-- Define C_Map fallback
+if not C_Map then
+    C_Map = {}
+end
+
+if not C_Map.GetBestMapForUnit then
+    function C_Map.GetBestMapForUnit(unit)
+        return GetCurrentMapAreaID()
+    end
+end
+
+if not C_Map.GetWorldPosFromMapPos then
+    function C_Map.GetWorldPosFromMapPos(id, vector)
+        local data = mapData[id]
+        if not data then return nil, nil end
+        local width, height, left, top = data[1], data[2], data[3], data[4]
+        local x = left - width * vector.x
+        local y = top - height * vector.y
+        local instance = data.instance
+        return CreateVector2D(x, y), instance
+    end
+end
+
+if not C_Map.GetMapInfo then
+    function C_Map.GetMapInfo(id)
+        local data = mapData[id]
+        if not data then return nil end
+        return { name = data.name, mapType = data.mapType, parentMapID = data.parent or 0 }
+    end
+end
+
+if not C_Map.GetMapChildrenInfo then
+    function C_Map.GetMapChildrenInfo(parent)
+        local children = {}
+        for id, data in pairs(mapData) do
+            if data.parent == parent then
+                table.insert(children, { mapID = id, name = data.name, mapType = data.mapType })
+            end
+        end
+        return children
+    end
+end
+
+if not C_Map.GetMapGroupMembersInfo then
+    function C_Map.GetMapGroupMembersInfo(groupID)
+        return {} -- No group members in 3.3.5
+    end
+end
+-- End of Compatibility fixes for WoW 3.3.5
 
 -- data table upvalues
 local mapData          = HereBeDragons.mapData -- table { width, height, left, top, .instance, .name, .mapType }
