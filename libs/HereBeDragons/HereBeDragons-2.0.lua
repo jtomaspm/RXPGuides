@@ -5,6 +5,11 @@ assert(LibStub, MAJOR .. " requires LibStub")
 
 local HereBeDragons, oldversion = LibStub:NewLibrary(MAJOR, MINOR)
 if not HereBeDragons then return end
+if not CreateVector2D then
+    function CreateVector2D(x, y)
+        return { x = x, y = y }
+    end
+end
 
 local CBH = LibStub("CallbackHandler-1.0")
 

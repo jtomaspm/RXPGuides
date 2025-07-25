@@ -1,4 +1,4 @@
-## Interface: 30403
+## Interface: 30300
 ## Title: RestedXP Guides
 ## Notes: In-game leveling guides
 ## Author: RestedXP
